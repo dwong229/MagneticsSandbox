@@ -1,0 +1,103 @@
+%% Model 1 magnet and 1 electromagnetic coil in 1D
+
+close all
+clear all
+
+
+% System definition
+% -----------------------
+%% Sliding friction model
+% mu_static = 0.005;
+% mu_kinetic = 0.001;
+% g = 9.81; %acceleration due to gravity
+% N = 0.1*g; 
+% F_drag = mu_kinetic*N*sign(v)*(-1);
+
+global rho magnet coil Ftotalvector
+Ftotalvector = [];
+
+%% Viscous drag friction model
+rho = 1000; % density of water 1000kg/m3
+magnet.mass = 0.1; %mass of the magnet, kg
+magnet.R = 0.01;
+magnet.A = magnet.R^2*pi;
+%Cd = 0.47; % drag coeff for sphere
+magnet.Cd = 1.05*10; % drag coeff for square
+magnet.u1 = 1;% magnetic dipole moment of permanet magnet (Am^2)
+
+% electromagnetic coil parameters
+coil.u0 = 4*pi*10^-7; % permiability of free space
+coil.R = 0.1; %coil radius m
+coil.I = 50; % apply a constant current
+coil.x = 0;
+
+%% initial condition
+% ----------------------
+x0_mag = 0.1;
+v0 = 0;
+
+X = [x0_mag v0];
+
+% Timing
+% ------
+tStart = 0;  % simulation start time (sec)
+tFinal = 100; % simulation start time (sec)
+
+
+graphicalsimualtion = true;
+%% Physics simulator
+% Set up the magnets starting config;
+Xinitial = X(end,:);
+
+tspan = [tStart tFinal];
+
+% solve for posn using ode45
+%[tvector, Xmatrix, timeAtEvent, stateAtEvent] = ode45(@compute_magnet_derivatives, tspan, Xinitial, option);
+[tvector, Xmatrix] = ode45(@compute_magnet_derivatives, tspan, Xinitial);
+sol = ode45(@compute_magnet_derivatives, tspan, Xinitial);
+
+[xxdot,xdotxddot] = deval(sol,tvector);
+
+force = xdotxddot(2,:)/magnet.mass;
+
+figure
+subplot(3,1,1)
+plot(tvector,Xmatrix(:,1));
+title('Position')
+subplot(3,1,2)
+plot(tvector,Xmatrix(:,2));
+title('Velocity')
+
+subplot(3,1,3)
+plot(tvector,xdotxddot(2,:));
+title('Acceleration')
+xlabel('time (sec)')
+
+%% Visualization
+
+if graphicalsimualtion
+    
+    h1 = figure;
+    hcoil = rectangle('Position',[coil.x-coil.R/8,-coil.R,coil.R/4,coil.R*2],'Curvature',[1 1],'LineWidth',2,'EdgeColor',[coil.I/coil.I 0 0]);
+    hold on
+    axis equal
+    
+    hmagnet = drawmagnet(Xmatrix(1,1),0,magnet.R*4,magnet.R*2,1);
+    ylim = get(gca,'YLim')
+    xlim('manual')
+    xlim([min(Xmatrix(:,1))-0.1,max(Xmatrix(:,1))+0.1]);
+    qscale = 1;
+    hforce = quiver(Xmatrix(1,1),0,force(1),0,qscale);
+   
+    dt = diff(tvector);
+    
+    for tidx = 2:length(tvector)
+        drawmagnet(Xmatrix(tidx,1),0,magnet.R*4,magnet.R*2,1,hmagnet);
+        %disp(tvector(tidx))
+        set(hforce,'XData',Xmatrix(tidx,1),'UData',force(tidx));
+        pause(dt(tidx-1)/20)
+    end
+end
+
+        
+    
