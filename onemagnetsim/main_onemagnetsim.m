@@ -33,7 +33,7 @@ coil.x = 0;
 
 %% initial condition
 % ----------------------
-x0_mag = 0.1;
+x0_mag = 0.5;
 v0 = 0;
 
 X = [x0_mag v0];
@@ -85,19 +85,30 @@ if graphicalsimualtion
     hmagnet = drawmagnet(Xmatrix(1,1),0,magnet.R*4,magnet.R*2,1);
     ylim = get(gca,'YLim')
     xlim('manual')
-    xlim([min(Xmatrix(:,1))-0.1,max(Xmatrix(:,1))+0.1]);
+    xlimvec = [min(Xmatrix(:,1))-0.1,max(Xmatrix(:,1))+0.1];
+    xlim(xlimvec);
     qscale = 1;
     hforce = quiver(Xmatrix(1,1),0,force(1),0,qscale);
    
-    dt = diff(tvector);
+    xlimvec = xlim;
+    xvec = xlimvec(1):diff(xlimvec)/100:xlimvec(2);
+    dBdx = -3 * xvec * coil.u0 * coil.I * coil.R^2./(2*(xvec.^2 + coil.R^2).^(5/2));
+    Bscale = 10;
+    plot(xvec,Bscale*dBdx,'-g')
+    ylabel('dB/dx')
+    set(gca,'YTickLabel',[])
     
+    dt = diff(tvector);
+    timetext = text(X(1),coil.R,'t = 0s');
+    % loop through the simulation and update the visualization
     for tidx = 2:length(tvector)
         drawmagnet(Xmatrix(tidx,1),0,magnet.R*4,magnet.R*2,1,hmagnet);
         %disp(tvector(tidx))
         set(hforce,'XData',Xmatrix(tidx,1),'UData',force(tidx));
+        timestr = strcat('t = ',num2str(tvector(tidx), '%3.1f'),' s');
+        set(timetext,'String',timestr);
+                
+        % time delay for visualization
         pause(dt(tidx-1)/20)
     end
-end
-
-        
-    
+end 
