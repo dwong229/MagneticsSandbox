@@ -46,6 +46,8 @@ Cperm = 1;
 % Permanent magnets using classical mechanics and integrating
 U = u*(-u0*I1*R^2./(2*(x1vec.^2+R^2).^(3/2)) - u0*I2*R^2./(2*((x1vec-L).^2+R^2).^(3/2)) + u0 * u./(4*pi.*(x1vec-x2)));
 
+% stable
+%U = u*(-u0*I1*R^2./(2*(x1vec.^2+R^2).^(3/2)) - u0*I2*R^2./(2*((x1vec-L).^2+R^2).^(3/2)) - u0 * u./(4*pi.*(x1vec-x2)));
 figure
 subplot(2,1,1)
 plot(x1vec,U)

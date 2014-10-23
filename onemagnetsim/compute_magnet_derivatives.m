@@ -5,7 +5,7 @@ x = state(1);
 v = state(2);
 
 % pack systemdef
-global rho magnet coil Ftotalvector
+global rho magnet coil
 Cd = magnet.Cd;
 A = magnet.A;
 u1 = magnet.u1;
@@ -22,7 +22,6 @@ F_B = u1 * 3 * p * u0 * I * Rcoil^2/(2*(p^2 + Rcoil^2)^(5/2));
 
 % compute acceleration
 F_total = F_drag + F_B;
-Ftotalvector = [Ftotalvector;F_total];
 a = F_total/mass;
 
 % pack state derivatives

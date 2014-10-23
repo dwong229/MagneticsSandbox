@@ -1,0 +1,121 @@
+% Non-dimensional analysis
+
+%  __
+% | x_1 x_2 - x_1/alpha
+% | ___________________
+% |
+% |
+% |__
+
+% Compute forces that can be exerted for a range of currents 
+
+% system variables
+close all
+clc
+
+%%----------[ CHANGE X1 AND X2 HERE ]------------------------
+
+alpha = 1; % ratio of L/R [distance between coil 1-2 and coil radius
+x1 = 0.15; % can range: 0< x1 <alpha
+x2 = 0.7; % can range: 0< x1 < x2 <alpha 
+magnetsinsameorientation = true;
+%%------------------------------------------------------------
+
+
+Iminmax = [-10,10];
+numpt = 100;
+I1 = Iminmax(1):range(Iminmax)/numpt:Iminmax(2); % -inf < I1 < inf 
+I2 = I1; % -inf < I2 < inf
+mu = 1;
+Fperm = 4*pi*10^(-7) * 1/(4*pi*1^2);
+
+if magnetsinsameorientation
+    J(1,1) = -3*mu/2 * x1/((x1^2+1)^(5/2));
+    
+    J(1,2) = -3*mu/2 * 1/alpha*(alpha*x1-1)/((1/alpha^2*(alpha*x1 - 1)^2+1)^(5/2));
+    
+    J(1,3) = (x2-x1)^(-2);
+    
+    J(2,1) = -3*mu/2 * x2/((x2^2+1)^(5/2));
+    
+    J(2,2) = -3*mu/2 * 1/alpha*(alpha*x2-1)/((1/alpha^2*(alpha*x2 - 1)^2+1)^(5/2));
+    
+    J(2,3) = -(x2-x1)^(-2);
+else
+    J(1,1) = -3*mu/2 * x1/((x1^2+1)^(5/2));
+    
+    J(1,2) = -3*mu/2 * 1/alpha*(alpha*x1-1)/((1/alpha^2*(alpha*x1 - 1)^2+1)^(5/2));
+    
+    J(1,3) = -(x2-x1)^(-2);
+    
+    J(2,1) = 3*mu/2 * x2/((x2^2+1)^(5/2));
+    
+    J(2,2) = 3*mu/2 * 1/alpha*(alpha*x2-1)/((1/alpha^2*(alpha*x2 - 1)^2+1)^(5/2));
+    
+    J(2,3) = (x2-x1)^(-2);
+end
+J
+% Loop through I1 and I2 values and store F1 F2
+
+idx = 1;
+for i = 1:numpt % resolution of i
+    for j = 1:length(I2)        
+        Ivec = [I1(i);I2(j);Fperm];
+        F(:,idx) = J*Ivec;
+        idx = idx + 1;
+    end
+end
+
+h1 = figure('Position',[89 250 560 674],'Color',[1 1 1]);
+
+axes1 = axes('Parent',h1,...
+    'Position',[0.13 0.40 .8 0.53]);
+
+%subplot(2,1,1)
+%% Uncomment the following line to preserve the X-limits of the axes
+%xlim(axes1,[-10 10]);
+%% Uncomment the following line to preserve the Y-limits of the axes
+%ylim(axes1,[-10 10]);
+box(axes1,'on');
+grid(axes1,'on');
+hold(axes1,'all');
+
+plot(F(1,:),F(2,:),'.b')
+titlestr = sprintf('X1: %3.2f X2: %3.2f',x1,x2);
+title(titlestr)
+grid on
+axis([-10 10 -10 10])
+%axis equal
+xlabel('F1')
+ylabel('F2')
+
+hold on
+
+%subplot(2,1,2)
+axes2 = axes('Parent',h1,'YTickLabel','',...
+    'Position',[0.13 0.11 0.8 0.17]);
+%% Uncomment the following line to preserve the X-limits of the axes
+ xlim(axes2,[-0.05 1.05]);
+ xlabel('x')
+ title('System configuration')
+%% Uncomment the following line to preserve the Y-limits of the axes
+% ylim(axes2,[-0.25 0.25]);
+hold(axes2,'all');
+coilarray = [0 1];
+hold on
+hcoil(1) = rectangle('Position',[0-.05,-0.25,.1,0.5],'Curvature',[1 1],'LineWidth',2,'EdgeColor',[1 0 0]);
+hcoil(2) = rectangle('Position',[1-.05,-0.25,.1,0.5],'Curvature',[1 1],'LineWidth',2,'EdgeColor',[1 0 0]);
+%plot([x1],[0],'ob','MarkerSize',10,'MarkerFaceColor','b')
+drawmagnet(x1,0,.1,0.05,1);
+if magnetsinsameorientation
+    drawmagnet(x2,0,.1,0.05,1);
+else
+    drawmagnet(x2,0,.1,0.05,-1);
+end
+drawmagnet(0.5,0,.1,0.05,1);
+
+%plot([x2],[0],'or','MarkerSize',10,'MarkerFaceColor','r')
+axis([-0.05 1.05 -.25 .25])
+set(gca,'YTickLabel',[])
+set(gcf,'PaperPositionMode','auto')
+%print(gcf,'-depsc','-r0',strcat('Opposing_',titlestr,'.eps'))
